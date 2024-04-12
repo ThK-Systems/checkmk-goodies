@@ -29,13 +29,14 @@ DATI=$(date +%s)
 log_volume_state() {
     local level=$1
     local healings=$2
+    local volume=$3
     if [ $healings -ge $VOLHEAL_COUNT_CRIT_NOW ]; then
       level=2
     fi
     if [ $level -lt 2 ] && [ $healings -ge $VOLHEAL_COUNT_WARN_NOW ]; then
       level=1
     fi
-    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings $volume_heals file(s) needs healing"
+    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings_$volume=$healings $volume_heals file(s) needs healing"
 }
 
 ### Check if this system has gluster installed
@@ -95,18 +96,18 @@ for volume in $($CMD_GLUSTER volume list); do
 
     dati_diff=$(($DATI - $first_dati))
     if [ $dati_diff -gt $VOLHEAL_MIN_SECS_CRIT ]; then
-      log_volume_state 2 $volume_heals
+      log_volume_state 2 $volume_heals $volume
     elif [ $dati_diff -gt $VOLHEAL_MIN_SECS_WARN ]; then
-      log_volume_state 1 $volume_heals
+      log_volume_state 1 $volume_heals $volume
     else
-      log_volume_state 0 $volume_heals
+      log_volume_state 0 $volume_heals $volume
     fi
 
   else
     if [ -f $state_file ]; then
       rm $state_file
     fi
-    log_volume_state 0 $volume_heals
+    log_volume_state 0 $volume_heals $volume
   fi
 
 done
