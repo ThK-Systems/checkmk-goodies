@@ -6,10 +6,11 @@ It is tested under Debian Linux bookworm (12) with check_mk 2.2.
 It comes wit no warranties at all!!!
 No support is available.
 
-## Install a single script
-1. Download the script(s) you need to use into the folder `/usr/lib/check_mk_agent/local/`
-2. Make the script executable (0755)
-3. Rescan the host in check_mk for new services
+## Install a single script (e.g. gluster)
+1. Download the script(s) you need to use (or clone the github-repo).
+2. Put it into the folder `/usr/lib/check_mk_agent/local/` 
+3. Make the script executable (0755)
+4. Rescan the host in check_mk for new services
 
 ## gluster
 Based on https://exchange.checkmk.com/p/gluster
