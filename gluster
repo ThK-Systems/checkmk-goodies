@@ -23,7 +23,13 @@ DATI=$(date +%s)
 log_volume_state() {
     local level=$1
     local healings=$2
-    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings;$VOLHEAL_COUNT_WARN_NOW;$VOLHEAL_COUNT_CRIT_NOW $volume_heals file(s) needs healing"
+    if [ $healings -ge $VOLHEAL_COUNT_CRIT_NOW ]; then
+      level=2
+    fi
+    if [ $level -lt 2 ] && [ $healings -ge $VOLHEAL_COUNT_WARN_NOW ]; then
+      level=1
+    fi
+    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings $volume_heals file(s) needs healing"
 }
 
 ### Check if this system has gluster installed
