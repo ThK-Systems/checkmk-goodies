@@ -1,12 +1,13 @@
-# glusterfs-goodies
-Goodies for glusterfs
+# checkmk-goodies
+Goodies for checkmk
 
 ## Disclaimer
 It is tested under Debian Linux bookworm (12) with check_mk 2.2.
-It comes wit no warranties.
+It comes wit no warranties at all!!!
+No support is available.
 
-## Install
-1. Put the script, you need to use into the folder `/usr/lib/check_mk_agent/local/`
+## Install a single script
+1. Download the script(s) you need to use into the folder `/usr/lib/check_mk_agent/local/`
 2. Make the script executable (0755)
 3. Rescan the host in check_mk for new services
 
