@@ -15,7 +15,12 @@ No support is available.
 ## gluster
 Based on https://exchange.checkmk.com/p/gluster
 
-Notifies only, when a healing is necessary after a certain period of time has passed. 
+It changed status in cause of a necessary healing after a certain period of time has passed. 
 A warning is generated first and then a critical status.
 
 The time periods can be adjusted in the head of the script.
+
+*The change to the checkmk plugin from lpwevers is motivated as follows: The plugin immediately sets the service level to 'Critical', as soon as at least one file needs to be healed.*
+*However, this seems to be a normal and regular process of glusterfs - at least if you use it under proxmox, as I do - which in my observation should not immediately trigger an alert in the monitoring.*
+
+*The 'gluster' script therefore takes over all checks (except for the quotas) from lpwevers' plugin and supplements the volume healing check with the option of first triggering a warning and then a critical alert after a certain time.*
