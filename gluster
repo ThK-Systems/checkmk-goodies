@@ -1,8 +1,13 @@
 #!/bin/bash
 
-VOLHEAL_MIN_SECS_WARN=75
-VOLHEAL_MIN_SECS_CRIT=280
+# Adjust those values to your needs
+VOLHEAL_MIN_SECS_WARN=75    # Wait x seconds to set service to warning
+VOLHEAL_MIN_SECS_CRIT=280   # Wait x seconds to set service to critical
 
+VOLHEAL_COUNT_WARN_NOW=10   # If at least n healings outstanding, goto warning independent from VOLHEAL*SECS values
+VOLHEAL_COUNT_CRIT_NOW=15   # If at least n healings outstanding, goto warning independent from VOLHEAL*SECS values
+
+# Common definitions (do not touch)
 DIR_STATE=/var/lib/check_mk_agent/state
 
 CMD_GLUSTER="/usr/sbin/gluster"
@@ -15,11 +20,10 @@ LOG_PREFIX_VOLUME="Gluster volume"
 DATI=$(date +%s)
 
 ### Sub functions
-
 log_volume_state() {
     local level=$1
     local healings=$2
-    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings;10;15 $volume_heals file(s) needs healing"
+    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings;$VOLHEAL_COUNT_WARN_NOW;$VOLHEAL_COUNT_CRIT_NOW $volume_heals file(s) needs healing"
 }
 
 ### Check if this system has gluster installed
@@ -83,13 +87,10 @@ for volume in $($CMD_GLUSTER volume list); do
 
     dati_diff=$(($DATI - $first_dati))
     if [ $dati_diff -gt $VOLHEAL_MIN_SECS_CRIT ]; then
-      #echo "2 \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$volume_heals;10;15 $volume_heals file(s) needs healing (since $dati_diff seconds)"
       log_volume_state 2 $volume_heals
     elif [ $dati_diff -gt $VOLHEAL_MIN_SECS_WARN ]; then
-      #echo "1 \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$volume_heals;10;15 $volume_heals file(s) needs healing (since $dati_diff seconds)"
       log_volume_state 1 $volume_heals
     else
-      #echo "0 \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$volume_heals;10;15 $volume_heals file(s) needs healing (since $dati_diff seconds)"
       log_volume_state 0 $volume_heals
     fi
 
@@ -97,7 +98,6 @@ for volume in $($CMD_GLUSTER volume list); do
     if [ -f $state_file ]; then
       rm $state_file
     fi
-    #echo "0 \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$volume_heals;10;15 $volume_heals file(s) needs healing"
     log_volume_state 0 $volume_heals
   fi
 
