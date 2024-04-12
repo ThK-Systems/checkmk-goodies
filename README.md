@@ -2,9 +2,9 @@
 Goodies for checkmk
 
 ## Disclaimer
-It is tested under Debian Linux bookworm (12) with check_mk 2.2.
-It comes wit no warranties at all!!!
-No support is available.
+- It is tested under Debian Linux bookworm (12) with check_mk 2.2.
+- It comes wit no warranties at all!!!
+- Support is not available.
 
 ## Install a single script (e.g. gluster)
 1. Download the script(s) you need to use (or clone the github-repo).
