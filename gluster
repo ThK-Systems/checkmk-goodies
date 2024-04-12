@@ -42,7 +42,7 @@ if [ ! -d $DIR_STATE ]; then
   mkdir -p $DIR_STATE
 fi
 
-### Check daemons 
+### Check demons
 if ! $CMD_PIDOF glusterd &>/dev/null; then
   echo "2 \"$LOG_PREFIX_DAEMON\" - Gluster management service is not running"
   exit 0
@@ -50,7 +50,7 @@ elif ! $CMD_PIDOF glusterfsd &>/dev/null; then
   echo "2 \"$LOG_PREFIX_DAEMON\" - Gluster brick service is not running"
   exit 0 
 else
-  echo "0 \"$LOG_PREFIX_DAEMON\" - Gluster services are running"
+  echo "0 \"$LOG_PREFIX_DAEMON\" - Gluster services are all running"
 fi
 
 ### Check peers
@@ -61,7 +61,7 @@ do
   if [ $state == "Connected" ]; then
     echo "0 \"$LOG_PREFIX_PEER $peer\" - Connected"
   else
-    echo "2 \"$LOG_PREFIX_PEER $peer\" - Not connected"
+    echo "2 \"$LOG_PREFIX_PEER $peer\" - Not connected ($state)"
   fi
 done
 
@@ -78,10 +78,6 @@ for volume in $($CMD_GLUSTER volume list); do
 
   state_file="$DIR_STATE/gluster_volume_state_$volume"
 
-  # DEBUG
-#  volume_heals=1
-  # DEBUG END
-  
   if [ $volume_heals -gt 0 ]; then
 
     first_dati=$DATI
