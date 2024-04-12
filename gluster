@@ -14,6 +14,14 @@ LOG_PREFIX_VOLUME="Gluster volume"
 
 DATI=$(date +%s)
 
+### Sub functions
+
+log_volume_state() {
+    local level=$1
+    local healings=$2
+    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings;10;15 $volume_heals file(s) needs healing"
+}
+
 ### Check if this system has gluster installed
 if [ ! -x "$CMD_GLUSTER" ]; then
   exit 0
@@ -94,9 +102,3 @@ for volume in $($CMD_GLUSTER volume list); do
   fi
 
 done
-
-log_volume_state() {
-    local level=$1
-    local healings=$2
-    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings=$healings;10;15 $volume_heals file(s) needs healing"
-}
