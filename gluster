@@ -73,7 +73,7 @@ for volume in $($CMD_GLUSTER volume list); do
       echo $DATI > $state_file
     fi
 
-    dati_diff=$($DATI - $first_dati)
+    dati_diff=$(($DATI - $first_dati))
     if [ $dati_diff -gt $VOLHEAL_MIN_SECS_CRIT ]; then
       echo "2 \"$LOG_PREFIX_VOLUME $volume $volume_heals $volume_heals file(s) needs healing (since $dati_diff seconds)"
     elif [ $dati_diff -gt $VOLHEAL_MIN_SECS_WARN ]; then
