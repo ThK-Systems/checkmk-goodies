@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VOLHEAL_MIN_SECS_WARN=150
+VOLHEAL_MIN_SECS_WARN=75
 VOLHEAL_MIN_SECS_CRIT=280
 
 DIR_STATE=/var/lib/check_mk_agent/state
@@ -90,5 +90,3 @@ for volume in $($CMD_GLUSTER volume list); do
   fi
 
 done
-
-
