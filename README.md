@@ -15,8 +15,8 @@ Goodies for [checkmk](https://checkmk.com)
 ## gluster
 Partially based on the gluster checkmk plugin ( https://exchange.checkmk.com/p/gluster ) from lpwevers.
 
-It monitors glusterfs demons (running-state) and peers (connection state) and volumes (needed healings).
-Also, the needed healings of a volume are available as a metric.
+It monitors glusterfs demons (running-state) and peers (connection-state) and volumes (needed healings).
+Also, the needed healings of a volume are available as a metric for this volume.
 
 At the head of the script, you can configure some time periods and other values.
 
