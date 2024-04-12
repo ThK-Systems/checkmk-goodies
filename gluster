@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Copyright by ThK-Systems/Thomas Kuhlmann 2024
+# Licensed by GPL-3
+#
+# partially based on https://exchange.checkmk.com/p/gluster
+
+
 # Adjust those values to your needs
 VOLHEAL_MIN_SECS_WARN=75    # Wait x seconds to set service to warning
 VOLHEAL_MIN_SECS_CRIT=280   # Wait x seconds to set service to critical
