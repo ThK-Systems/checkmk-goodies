@@ -16,7 +16,7 @@ Goodies for [checkmk](https://checkmk.com)
 Based on https://exchange.checkmk.com/p/gluster
 
 It monitors gluster demons (running-state) and peers (connection state) and volumes (needed healings).
-Also the needed healings of a volume are available as a metric.
+Also, the needed healings of a volume are available as a metric.
 
 At the head of the script, you can configure some time periods and other values.
 
