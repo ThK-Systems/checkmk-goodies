@@ -1,0 +1,94 @@
+#!/bin/bash
+
+VOLHEAL_MIN_SECS_WARN=150
+VOLHEAL_MIN_SECS_CRIT=280
+
+DIR_STATE=/var/lib/check_mk_agent/state
+
+CMD_GLUSTER="/usr/sbin/gluster"
+CMD_PIDOF="/bin/pidof"
+
+LOG_PREFIX_DAEMON="Gluster services"
+LOG_PREFIX_PEER="Gluster peer"
+LOG_PREFIX_VOLUME="Gluster volume"
+
+DATI=`date +%s`
+
+### Check if this system has gluster installed
+if [ ! -x "$CMD_GLUSTER" ]; then
+  exit 0
+fi
+
+### Create state direcotory, if not exists
+if [ ! -d $DIR_STATE ]; then
+  mkdir -p $DIR_STATE
+fi
+
+### Check daemons 
+if ! $CMD_PIDOF glusterd &>/dev/null; then
+  echo "2 \"$LOG_PREFIX_DAEMON\" - Gluster management service is not running"
+  exit 0
+elif ! $CMD_PIDOF glusterfsd &>/dev/null; then
+  echo "2 \"$LOG_PREFIX_DAEMON\" - Gluster brick service is not running"
+  exit 0 
+else
+  echo "0 \"$LOG_PREFIX_DAEMON\" - Gluster services are running"
+fi
+
+### Check peers
+for peer in $($CMD_GLUSTER pool list | sed "s/localhost/`hostname`/" | grep -v "UUID" | awk '{ print $2","$3 }')
+do
+  state=`echo $peer | awk -F ',' '{ print $2 }'`
+  peer=`echo $peer | awk -F ',' '{ print $1 }'` 
+  if [ $state == "Connected" ]; then
+    echo "0 \"$LOG_PREFIX_PEER $peer\" - Connected"
+  else
+    echo "2 \"$LOG_PREFIX_PEER $peer\" - Not connected"
+  fi
+done
+
+### Check volumes
+for volume in $($CMD_GLUSTER volume list); do
+  volume_heals=0
+  entries=
+
+  for entries in $($CMD_GLUSTER volume heal $volume info | grep '^Number of entries: ' | awk '{print $4}' | sed 's/-/0/'); do
+    if [ "$entries" -gt 0 ]; then
+      let $((thisvolerror+=entries))
+    fi
+  done
+
+  state_file="$DIR_STATE/gluster_volume_state_$volume"
+
+  # DEBUG
+#  volume_heals=1
+  # DEBUG END
+  
+  if [ $volume_heals -gt 0 ]; then
+
+    first_dati=$DATI
+    if [ -f $state_file ]; then
+      first_dati=$(cat $state_file)
+    else
+      echo $DATI > $state_file
+    fi
+
+    dati_diff=$(($DATI - $first_dati))
+    if [ $dati_diff -gt $VOLHEAL_MIN_SECS_CRIT ]; then
+      echo "2 \"$LOG_PREFIX_VOLUME $volume $volume_heals $volume_heals file(s) need healing"
+    elif [ $dati_diff -gt $VOLHEAL_MIN_SECS_WARN ]; then
+      echo "1 \"$LOG_PREFIX_VOLUME $volume $volume_heals $volume_heals file(s) need healing"
+    else
+      echo "0 \"$LOG_PREFIX_VOLUME $volume $volume_heals $volume_heals file(s) need healing"
+    fi
+
+  else
+    if [ -f $state_file ]; then
+      rm $state_file
+    fi
+    echo "0 \"$LOG_PREFIX_VOLUME $volume $volume_heals $volume_heals file(s) need healing"
+  fi
+
+done
+
+
