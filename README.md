@@ -15,10 +15,10 @@ Goodies for [checkmk](https://checkmk.com)
 ## gluster
 Based on https://exchange.checkmk.com/p/gluster
 
-It changed status in cause of a necessary healing after a certain period of time has passed. 
-A warning is generated first and then a critical status.
+It monitors gluster demons (running-state) and peers (connection state) and volumes (needed healings).
+Also the needed healings of a volume are available as a metric.
 
-The time periods can be adjusted in the head of the script.
+At the head of the script, you can configure some time periods and other values.
 
 *The change to the checkmk plugin from lpwevers is motivated as follows: The plugin immediately sets the service level to 'Critical', as soon as at least one file needs to be healed.*
 *However, this seems to be a normal and regular process of glusterfs - at least if you use it under proxmox, as I do - which in my observation should not immediately trigger an alert in the monitoring.*
