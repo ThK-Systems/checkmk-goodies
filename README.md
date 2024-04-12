@@ -13,16 +13,16 @@ Goodies for [checkmk](https://checkmk.com)
 4. Rescan the host in check_mk for new services
 
 ## gluster
-Based on https://exchange.checkmk.com/p/gluster
+Partially based on https://exchange.checkmk.com/p/gluster
 
-It monitors gluster demons (running-state) and peers (connection state) and volumes (needed healings).
+It monitors glusterfs demons (running-state) and peers (connection state) and volumes (needed healings).
 Also, the needed healings of a volume are available as a metric.
 
 At the head of the script, you can configure some time periods and other values.
 
-*The change to the checkmk plugin from lpwevers is motivated as follows: The plugin immediately sets the service level to 'Critical', as soon as at least one file needs to be healed.*
+*The changes to the checkmk plugin from lpwevers are motivated as follows: The plugin immediately sets the service level to 'Critical', as soon as at least one file needs to be healed.*
 *However, this seems to be a normal and regular process of glusterfs - at least if you use it under proxmox, as I do - which in my observation should not immediately trigger an alert in the monitoring.*
 
-*The 'gluster' script therefore takes over all checks (except for the quotas) from lpwevers' plugin and supplements the volume healing check with the option of first triggering a warning and then a critical alert after a certain time or a certain count of healings.*
+*The 'gluster' script therefore takes over all checks (except for the quotas) from lpwevers' plugin and supplements the volume healing check with the option of first triggering a warning and then a critical alert after a certain (and configurable) time or a certain (and configurable) count of healings.*
 
 To use this script, you have to disable lpwevers' plugin.
