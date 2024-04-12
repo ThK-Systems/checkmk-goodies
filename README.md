@@ -13,7 +13,7 @@ Goodies for [checkmk](https://checkmk.com)
 4. Rescan the host in check_mk for new services
 
 ## gluster
-Partially based on https://exchange.checkmk.com/p/gluster
+Partially based on the gluster checkmk plugin ( https://exchange.checkmk.com/p/gluster ) from lpwevers.
 
 It monitors glusterfs demons (running-state) and peers (connection state) and volumes (needed healings).
 Also, the needed healings of a volume are available as a metric.
