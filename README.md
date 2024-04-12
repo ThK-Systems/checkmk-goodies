@@ -6,10 +6,10 @@ Goodies for [checkmk](https://checkmk.com)
 - It comes with no warranty at all!!!
 - Support will be not available.
 
-## Install a single script (e.g. gluster)
-1. Download the script(s) you need to use (or clone the github-repo)
-2. Put it into the folder `/usr/lib/check_mk_agent/local/` 
-3. Make the script executable (0755)
+## Install one or more scripts (e.g. 'gluster')
+1. Download the script(s) you want to use (or clone the github-repo)
+2. Put it/them into the folder `/usr/lib/check_mk_agent/local/` 
+3. Make the script(s) executable (0755)
 4. Rescan the host in check_mk for new services
 
 ## gluster
