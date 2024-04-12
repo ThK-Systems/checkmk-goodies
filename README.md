@@ -1,5 +1,5 @@
 # checkmk-goodies
-Goodies for checkmk
+Goodies for [checkmk](https://checkmk.com)
 
 ## Disclaimer
 - It is tested under Debian Linux bookworm (12) with check_mk 2.2.
