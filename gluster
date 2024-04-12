@@ -79,7 +79,7 @@ for volume in $($CMD_GLUSTER volume list); do
 
   for entries in $($CMD_GLUSTER volume heal $volume info | grep '^Number of entries: ' | awk '{print $4}' | sed 's/-/0/'); do
     if [ "$entries" -gt 0 ]; then
-      (( thisvolerror+=entries ))
+      thisvolerror=$(( thisvolerror + entries ))
     fi
   done
 
