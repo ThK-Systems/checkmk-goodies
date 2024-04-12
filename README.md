@@ -3,7 +3,7 @@ Goodies for [checkmk](https://checkmk.com)
 
 ## Disclaimer
 - It is only tested under Debian Linux (12) 'bookworm' with check_mk 2.2.
-- It comes with no warranties at all!!!
+- It comes with no warranty at all!!!
 - Support will be not available.
 
 ## Install a single script (e.g. gluster)
