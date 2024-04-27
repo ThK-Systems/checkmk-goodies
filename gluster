@@ -90,8 +90,7 @@ for volume in $($CMD_GLUSTER volume list); do
 
     first_dati=$DATI
     if [ -f $state_file ]; then
-      first_dati=$(cat $state_file)
-      read -r first_dati last_log_level < datei.txt
+      read -r first_dati last_log_level < $state_file
     fi
 
     log_level=2
