@@ -1,9 +1,11 @@
 #!/bin/bash
 
+#
 # Copyright by ThK-Systems/Thomas Kuhlmann 2024
 # Licensed by Apache License 2.0
 #
 # partially based on https://exchange.checkmk.com/p/gluster
+#
 
 
 # Adjust those values to your needs
