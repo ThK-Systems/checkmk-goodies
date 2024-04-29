@@ -35,20 +35,3 @@ __Note__
 *The 'gluster' script therefore takes over all checks (except for the quotas) from lpwevers´ plugin and supplements the volume healing check with the option of first triggering a warning and then a critical alert after a certain (and configurable) time or a certain (and configurable) count of healings.*
 
 To use this script, you have to disable lpwevers´ plugin.
-
-
-## hdidle
-
-__Requirements__:
-- smartctl
-
-__Description__
-
-It monitors the idle state of one or more disks.
-
-Set the disks to monitor at the head of the script
-
-__Notes__
-
-- It never goes to warning or critical state. It just monitors the idle state.
-- It is only tested for ata devices
