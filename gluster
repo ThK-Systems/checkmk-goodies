@@ -32,13 +32,18 @@ log_volume_state() {
     local level=$1
     local healings=$2
     local volume=$3
+    local seconds=$4
     if [ $healings -ge $VOLHEAL_COUNT_CRIT_NOW ]; then
       level=2
     fi
     if [ $level -lt 2 ] && [ $healings -ge $VOLHEAL_COUNT_WARN_NOW ]; then
       level=1
     fi
-    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings_$volume=$healings $volume_heals file(s) needs healing"
+    seconds_suffix=""
+    if [ $seconds -gt 0 ]; then
+      seconds_suffix=" (since at least $seconds seconds)"
+    fi
+    echo "$level \"$LOG_PREFIX_VOLUME $volume\" gluster_healings_$volume=$healings $volume_heals file(s) needs healing $seconds_suffix"
     return $level
 }
 
@@ -98,13 +103,13 @@ for volume in $($CMD_GLUSTER volume list); do
     log_level=2
     dati_diff=$(($DATI - $first_dati))
     if [ $dati_diff -gt $VOLHEAL_MIN_SECS_CRIT ]; then
-      log_volume_state 2 $volume_heals $volume
+      log_volume_state 2 $volume_heals $volume $dati_diff
       log_level=$?
     elif [[ $dati_diff -gt $VOLHEAL_MIN_SECS_WARN || $last_log_level -gt 0 ]]; then
-      log_volume_state 1 $volume_heals $volume
+      log_volume_state 1 $volume_heals $volume $dati_diff
       log_level=$?
     else
-      log_volume_state 0 $volume_heals $volume
+      log_volume_state 0 $volume_heals $volume $dati_diff
       log_level=$?
     fi
 
@@ -114,7 +119,7 @@ for volume in $($CMD_GLUSTER volume list); do
     if [ -f $state_file ]; then
       rm $state_file
     fi
-    log_volume_state 0 $volume_heals $volume
+    log_volume_state 0 $volume_heals $volume 0
   fi
 
 done
