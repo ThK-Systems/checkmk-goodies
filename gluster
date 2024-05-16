@@ -12,8 +12,8 @@
 VOLHEAL_MIN_SECS_WARN=75    # Wait x seconds to set service to warning
 VOLHEAL_MIN_SECS_CRIT=280   # Wait x seconds to set service to critical
 
-VOLHEAL_COUNT_WARN_NOW=10   # If at least n healings outstanding, goto warning independent from VOLHEAL*SECS values
-VOLHEAL_COUNT_CRIT_NOW=25   # If at least n healings outstanding, goto critical independent from VOLHEAL*SECS values
+VOLHEAL_COUNT_WARN_NOW=25   # If at least n healings outstanding, goto warning independent from VOLHEAL*SECS values
+VOLHEAL_COUNT_CRIT_NOW=50   # If at least n healings outstanding, goto critical independent from VOLHEAL*SECS values
 
 # Common definitions (do not touch)
 DIR_STATE=/var/lib/check_mk_agent/state
