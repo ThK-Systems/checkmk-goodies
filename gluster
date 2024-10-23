@@ -9,8 +9,8 @@
 
 
 # Adjust those values to your needs
-VOLHEAL_MIN_SECS_WARN=125   # Wait x seconds to set service to warning
-VOLHEAL_MIN_SECS_CRIT=280   # Wait x seconds to set service to critical
+VOLHEAL_MIN_SECS_WARN=195   # Wait x seconds to set service to warning
+VOLHEAL_MIN_SECS_CRIT=615   # Wait x seconds to set service to critical
 
 VOLHEAL_COUNT_WARN_NOW=50   # If at least n healings outstanding, goto warning independent from VOLHEAL*SECS values
 VOLHEAL_COUNT_CRIT_NOW=100   # If at least n healings outstanding, goto critical independent from VOLHEAL*SECS values
