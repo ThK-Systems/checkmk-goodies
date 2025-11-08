@@ -85,7 +85,7 @@ for volume in $($CMD_GLUSTER volume list); do
   volume_heals=0
   entries=
 
-  for entries in $($CMD_GLUSTER volume heal $volume info | grep '^Number of entries: ' | awk '{print $4}' | sed 's/-/0/'); do
+  for entries in $($CMD_GLUSTER volume heal $volume info summary | grep '^Total Number of entries: ' | awk '{print $5}'); do
     if [ "$entries" -gt 0 ]; then
       volume_heals=$(( volume_heals + entries ))
     fi
