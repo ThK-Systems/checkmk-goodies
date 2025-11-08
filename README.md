@@ -2,7 +2,7 @@
 Goodies for [checkmk](https://checkmk.com)
 
 ### Disclaimer
-- It is only tested under Debian Linux (12) 'bookworm' with check_mk 2.2.
+- It is only tested under Debian Linux (12/13) 'bookworm'/'trixie' with check_mk 2.2, 2.3, 2.4.
 - It comes with no warranty at all!!!
 - Support will be not available.
 - Contributions are welcome
