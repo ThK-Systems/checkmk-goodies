@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+import subprocess
+import re
+import os
+
+# ------------------------------------------------------------
+# Threshold configuration (env with defaults)
+# ------------------------------------------------------------
+DECISIONS_WARN = int(os.getenv("CROWDSEC_DECISIONS_WARN", "5"))
+DECISIONS_CRIT = int(os.getenv("CROWDSEC_DECISIONS_CRIT", "20"))
+
+# ------------------------------------------------------------
+def run(cmd):
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+    except subprocess.CalledProcessError as e:
+        return e.output
+    except Exception:
+        return ""
+
+def count_csv_rows(raw):
+    """
+    Count only rows that start with a numeric ID.
+    This matches real decisions exactly for
+    `cscli --output raw decisions list`.
+    """
+    count = 0
+    for line in raw.splitlines():
+        line = line.strip()
+        if re.match(r"^\d+,", line):
+            count += 1
+    return count
+
+# ------------------------------------------------------------
+# 1. LAPI reachable (NO perfdata → numeric state)
+# ------------------------------------------------------------
+lapi = run(["cscli", "lapi", "status"])
+
+if "You can successfully interact with Local API" in lapi:
+    print('0 "crowdsec lapi" - LAPI reachable')
+elif lapi:
+    msg = lapi.strip().splitlines()[-1]
+    print(f'2 "crowdsec lapi" - {msg}')
+else:
+    print('3 "crowdsec lapi" - cscli lapi status failed')
+
+# ------------------------------------------------------------
+# 2. Decisions (WITH perfdata → P)
+# ------------------------------------------------------------
+dec_raw = run(["cscli", "--output", "raw", "decisions", "list"])
+decisions = count_csv_rows(dec_raw)
+
+# Checkmk Local: "P" = OK with perfdata
+print(
+    f'P "crowdsec decisions" '
+    f'decisions={decisions};{DECISIONS_WARN};{DECISIONS_CRIT} '
+    f'{decisions} active decisions'
+)
