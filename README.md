@@ -51,6 +51,4 @@ The plugin exposes three services: `zram used`, `zram filled`, and `zram compres
 
 The main service, `zram used`, tracks the **logically used (uncompressed) data volume** and is the only stateful check.  Alerting is based on **relative fullness** of zram, using configurable percentage thresholds rather than fixed sizes. This makes the check independent of the actual zram configuration and robust across hosts.  
 
-The `zram filled` service provides a **percentage-based view** of how full zram is and is intended for visualization only.  
-
 The `zram compression` service shows the current **compression ratio** as an informational metric.  Physical RAM consumption of zram is shown in the service output for context but is not used for alerting.  
