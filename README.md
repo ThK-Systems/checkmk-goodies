@@ -47,7 +47,7 @@ This Checkmk local plugin monitors **zram-based swap** on Linux systems with a c
 
 It is designed for environments where zram acts as a **pressure buffer**, not as a primary memory resource.  
 
-The plugin exposes three services: `zram used`, `zram filled`, and `zram compression`, each representing a single, well-defined aspect of zram behavior.  
+The plugin exposes two services: `zram used` and `zram compression`, each representing a single, well-defined aspect of zram behavior.  
 
 The main service, `zram used`, tracks the **logically used (uncompressed) data volume** and is the only stateful check.  Alerting is based on **relative fullness** of zram, using configurable percentage thresholds rather than fixed sizes. This makes the check independent of the actual zram configuration and robust across hosts.  
 
