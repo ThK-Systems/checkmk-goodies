@@ -35,3 +35,22 @@ __Note__
 *The 'gluster' script therefore takes over all checks (except for the quotas) from lpwevers´ plugin and supplements the volume healing check with the option of first triggering a warning and then a critical alert after a certain (and configurable) time or a certain (and configurable) count of healings.*
 
 To use this script, you have to disable lpwevers´ plugin.
+
+## zram
+
+__Requirements__:
+- zram-tools
+
+__Description__
+
+This Checkmk local plugin monitors **zram-based swap** on Linux systems with a clear separation between **capacity, usage, and efficiency**.  
+
+It is designed for environments where zram acts as a **pressure buffer**, not as a primary memory resource.  
+
+The plugin exposes three services: `zram used`, `zram filled`, and `zram compression`, each representing a single, well-defined aspect of zram behavior.  
+
+The main service, `zram used`, tracks the **logically used (uncompressed) data volume** and is the only stateful check.  Alerting is based on **relative fullness** of zram, using configurable percentage thresholds rather than fixed sizes. This makes the check independent of the actual zram configuration and robust across hosts.  
+
+The `zram filled` service provides a **percentage-based view** of how full zram is and is intended for visualization only.  
+
+The `zram compression` service shows the current **compression ratio** as an informational metric.  Physical RAM consumption of zram is shown in the service output for context but is not used for alerting.  
