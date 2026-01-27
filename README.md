@@ -13,6 +13,34 @@ Goodies for [checkmk](https://checkmk.com)
 3. Make the script(s) executable (0755)
 4. Rescan the host in check_mk for new services
 
+---
+
+## crowdsec
+
+__Requirements__:
+- crowdsec
+
+__Description__
+
+This local plugin monitors **CrowdSec**. 
+
+It exposes two services: **`crowdsec lapi`** (LAPI reachability) and **`crowdsec decisions`** (number of active decisions). 
+
+LAPI reachability is determined via `cscli lapi status` and reflects whether the local system can successfully interact with the Local API.  
+
+Only **active decisions** are monitored, as they represent enforced security actions and are meaningful for monitoring.  
+Decisions are counted using `cscli decisions list`.  Warning and critical thresholds for decisions can be configured via environment variables.  
+The plugin uses the native Checkmk local check format and does not rely on Nagios-style pipes.  
+It is designed to be simple, robust, and semantically quiet in production environments.
+
+__Configuration__
+
+You can write the configuration to `/etc/check_mk/check_mk_agent.d/crowdsec.conf`
+- `CROWDSEC_DECISIONS_WARN=5`
+- `CROWDSEC_DECISIONS_CRIT=20`
+
+---
+
 ## gluster
 (Partially based on the gluster checkmk plugin ( https://exchange.checkmk.com/p/gluster ) from lpwevers.)
 
@@ -35,6 +63,8 @@ __Note__
 *The 'gluster' script therefore takes over all checks (except for the quotas) from lpwevers´ plugin and supplements the volume healing check with the option of first triggering a warning and then a critical alert after a certain (and configurable) time or a certain (and configurable) count of healings.*
 
 To use this script, you have to disable lpwevers´ plugin.
+
+---
 
 ## zram
 
