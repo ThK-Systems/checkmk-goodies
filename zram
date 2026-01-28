@@ -1,8 +1,8 @@
-#!/bin/sh
+!/bin/sh
 
 # thresholds in percent (logical zram fullness)
-WARN_PCT=70
-CRIT_PCT=90
+WARN_PCT="${ZRAM_WARN_PCT:-70}"
+CRIT_PCT="${ZRAM_CRIT_PCT:-90}"
 
 STAT="/sys/block/zram0/mm_stat"
 DISKSIZE="/sys/block/zram0/disksize"
@@ -11,7 +11,7 @@ DISKSIZE="/sys/block/zram0/disksize"
 # zram not active
 # ------------------------------------------------------------
 if [ ! -r "$STAT" ] || [ ! -r "$DISKSIZE" ]; then
-  echo "0 \"zram used\" zram_filled=0MB;0MB;0MB;0MB;0MB zram not active"
+  echo "0 \"zram used\" zram_filled_mb=0;0;0;0;0 zram not active"
   echo "0 \"zram compression\" compression_ratio=0 zram not active"
   exit 0
 fi
@@ -31,8 +31,15 @@ human() {
   }'
 }
 
+to_mb() {
+  awk -v x="$1" 'BEGIN { printf "%.0f", x/1024/1024 }'
+}
+
 orig_h=$(human "$orig")
 mem_h=$(human "$mem")
+
+orig_mb=$(to_mb "$orig")
+size_mb=$(to_mb "$zram_size")
 
 # ------------------------------------------------------------
 # compression ratio
@@ -49,36 +56,24 @@ fi
 state=0
 fill_pct=0
 
-if [ "$zram_size" -gt 0 ]; then
-  fill_pct=$(awk "BEGIN { printf \"%.0f\", ($orig*100)/$zram_size }")
+if [ "$size_mb" -gt 0 ]; then
+  fill_pct=$(awk "BEGIN { printf \"%.0f\", ($orig_mb*100)/$size_mb }")
   [ "$fill_pct" -ge "$WARN_PCT" ] && state=1
   [ "$fill_pct" -ge "$CRIT_PCT" ] && state=2
 fi
 
 # ------------------------------------------------------------
-# thresholds in bytes (derived from percent)
+# thresholds in MB (derived from percent)
 # ------------------------------------------------------------
-warn_bytes=$(awk "BEGIN { printf \"%.0f\", ($zram_size*$WARN_PCT)/100 }")
-crit_bytes=$(awk "BEGIN { printf \"%.0f\", ($zram_size*$CRIT_PCT)/100 }")
+warn_mb=$(awk "BEGIN { printf \"%.0f\", ($size_mb*$WARN_PCT)/100 }")
+crit_mb=$(awk "BEGIN { printf \"%.0f\", ($size_mb*$CRIT_PCT)/100 }")
 
 # ------------------------------------------------------------
-# convert to MB for perfdata (display only)
+# Service 1: zram used (MB for proper graph scaling)
 # ------------------------------------------------------------
-orig_mb=$((orig / 1024 / 1024))
-warn_mb=$((warn_bytes / 1024 / 1024))
-crit_mb=$((crit_bytes / 1024 / 1024))
-zram_size_mb=$((zram_size / 1024 / 1024))
+echo "$state \"zram used (mb)\" zram_filled_mb=${orig_mb};${warn_mb};${crit_mb};0;${size_mb} logical=$orig_h, real=$mem_h, fill=${fill_pct}%"
 
 # ------------------------------------------------------------
-# Service 1: zram used (stateful, logical volume in MB)
+# Service 2: zram compression (ratio graph)
 # ------------------------------------------------------------
-echo "$state \"zram used\" \
-zram_filled=${orig_mb}MB;${warn_mb}MB;${crit_mb}MB;0MB;${zram_size_mb}MB \
-logical=$orig_h real=$mem_h fill=${fill_pct}% compression=${ratio}:1"
-
-# ------------------------------------------------------------
-# Service 2: zram compression (informational)
-# ------------------------------------------------------------
-echo "0 \"zram compression\" \
-compression_ratio=${ratio} \
-compression ratio ${ratio}:1"
+echo "0 \"zram compression\" compression_ratio=${ratio} compression=${ratio}:1"
