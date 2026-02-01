@@ -48,7 +48,7 @@ __Requirements__:
 
 __Description__
 
-## Docker Container Memory (Local Check)
+Docker Container Memory (Local Check)
 
 This Checkmk local agent plugin monitors memory usage of all running Docker containers relative to their configured memory limits.
 
