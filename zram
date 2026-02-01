@@ -1,4 +1,4 @@
-!/bin/sh
+#!/bin/sh
 
 # thresholds in percent (logical zram fullness)
 WARN_PCT="${ZRAM_WARN_PCT:-70}"
