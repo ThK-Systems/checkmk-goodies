@@ -41,6 +41,31 @@ You can write the configuration to `/etc/check_mk/check_mk_agent.d/crowdsec.conf
 
 ---
 
+## docker_container_memory
+
+__Requirements__:
+- docker
+
+__Description__
+
+## Docker Container Memory (Local Check)
+
+This Checkmk local agent plugin monitors memory usage of all running Docker containers relative to their configured memory limits.
+
+The check runs on the Docker host and uses `docker stats --no-stream` to collect current memory usage and limits. For each container with a defined memory limit, a dedicated Checkmk service is created.
+
+Reported metrics include current memory usage, warning and critical thresholds (derived from the container limit), and the maximum memory limit. All values are reported as numeric perfdata suitable for graphing.
+
+Containers without an explicit memory limit are automatically ignored.
+
+__Configuration__
+
+You can write the configuration to `/etc/check_mk/check_mk_agent.d/docker_container_memory.conf`
+- `WARN_PCT` (default: 85)
+- `CRIT_PCT` (default: 95)
+
+---
+
 ## gluster
 (Partially based on the gluster checkmk plugin ( https://exchange.checkmk.com/p/gluster ) from lpwevers.)
 
