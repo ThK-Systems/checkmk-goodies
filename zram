@@ -11,8 +11,8 @@ DISKSIZE="/sys/block/zram0/disksize"
 # zram not active
 # ------------------------------------------------------------
 if [ ! -r "$STAT" ] || [ ! -r "$DISKSIZE" ]; then
-  echo "0 \"zram used\" zram_filled_mb=0;0;0;0;0 zram not active"
-  echo "0 \"zram compression\" compression_ratio=0 zram not active"
+  echo "0 \"zram used (mb)\" zram_filled_mb=0;0;0;0;0 zram not active"
+  echo "0 \"zram compression (mb)\" compression_ratio=0 zram not active"
   exit 0
 fi
 
