@@ -169,9 +169,9 @@ def main() -> None:
 
         # ---------------- state ----------------
         if ins is None:
-            print(f'2 "Container {name} state" - CRIT: container not present')
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: container not present')
-            print(f'3 "Container {name} cpu" - UNKNOWN: container not present')
+            print(f'2 "Container {name} state" - Container not present')
+            print(f'3 "Container {name} memory (mb)" - Container not present')
+            print(f'3 "Container {name} cpu" - Container not present')
             continue
 
         st = ins.state
@@ -180,59 +180,59 @@ def main() -> None:
 
         if running:
             age = human_duration(seconds_since(st["StartedAt"]))
-            print(f'0 "Container {name} state" - OK: running since {age}')
+            print(f'0 "Container {name} state" - Running since {age}')
 
         elif status == "restarting":
             age = human_duration(seconds_since(st["StartedAt"]))
             print(
-                f'1 "Container {name} state" - WARN: restarting since {age} '
+                f'1 "Container {name} state" - Restarting since {age} '
                 f"(restart #{ins.restart_count})"
             )
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: restarting')
-            print(f'3 "Container {name} cpu" - UNKNOWN: restarting')
+            print(f'3 "Container {name} memory (mb)" - Restarting')
+            print(f'3 "Container {name} cpu" - Restarting')
             continue
 
         elif status == "paused":
             age = human_duration(seconds_since(st["StartedAt"]))
-            print(f'1 "Container {name} state" - WARN: paused since {age}')
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: paused')
-            print(f'3 "Container {name} cpu" - UNKNOWN: paused')
+            print(f'1 "Container {name} state" - Paused since {age}')
+            print(f'3 "Container {name} memory (mb)" - Paused')
+            print(f'3 "Container {name} cpu" - Paused')
             continue
 
         elif status == "dead":
             age = human_duration(seconds_since(st["FinishedAt"]))
-            print(f'2 "Container {name} state" - CRIT: dead since {age}')
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: dead')
-            print(f'3 "Container {name} cpu" - UNKNOWN: dead')
+            print(f'2 "Container {name} state" - Dead since {age}')
+            print(f'3 "Container {name} memory (mb)" - Dead')
+            print(f'3 "Container {name} cpu" - Dead')
             continue
 
         elif st.get("OOMKilled"):
-            print(f'2 "Container {name} state" - CRIT: OOM killed')
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: OOM killed')
-            print(f'3 "Container {name} cpu" - UNKNOWN: OOM killed')
+            print(f'2 "Container {name} state" - OOM killed')
+            print(f'3 "Container {name} memory (mb)" - OOM killed')
+            print(f'3 "Container {name} cpu" - OOM killed')
             continue
 
         elif st.get("ExitCode", 0) == 0:
             age = human_duration(seconds_since(st["FinishedAt"]))
             print(
-                f'1 "Container {name} state" - WARN: stopped since {age} '
+                f'1 "Container {name} state" - Stopped since {age} '
                 f"(exit code 0)"
             )
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: stopped')
-            print(f'3 "Container {name} cpu" - UNKNOWN: stopped')
+            print(f'3 "Container {name} memory (mb)" - Stopped')
+            print(f'3 "Container {name} cpu" - Stopped')
             continue
 
         else:
-            print(f'2 "Container {name} state" - CRIT: exit code {st["ExitCode"]}')
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: exited')
-            print(f'3 "Container {name} cpu" - UNKNOWN: exited')
+            print(f'2 "Container {name} state" - Exited with exit code {st["ExitCode"]}')
+            print(f'3 "Container {name} memory (mb)" - Exited')
+            print(f'3 "Container {name} cpu" - Exited')
             continue
 
         # ---------------- cgroup ----------------
         cg = CG_BASE / f"docker-{ins.id}.scope"
         if not cg.exists():
-            print(f'3 "Container {name} memory (mb)" - UNKNOWN: cgroup missing')
-            print(f'3 "Container {name} cpu" - UNKNOWN: cgroup missing')
+            print(f'3 "Container {name} memory (mb)" - cgroup missing')
+            print(f'3 "Container {name} cpu" - cgroup missing')
             continue
 
         # ---------------- memory ----------------
