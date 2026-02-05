@@ -41,7 +41,7 @@ def human_duration(seconds: int) -> str:
     if not parts:
         parts.append(f"{sec}s")
 
-    return " ".join(partsg
+    return " ".join(parts)
 
 
 def seconds_since(ts: str) -> int:
