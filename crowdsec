@@ -66,6 +66,7 @@ elif lapi:
 else:
     print('3 "crowdsec lapi" - cscli lapi status failed')
     print('3 "crowdsec decisions" - no lapi available')
+    exit 0
 
 # ------------------------------------------------------------
 # 2. Decisions (WITH perfdata → P)
