@@ -294,8 +294,8 @@ def main() -> None:
         print(
             f'P "Container {name} memory (mb)" '
             f'{ram_perf}|{swap_perf} '
-            f'RAM={ram_txt}, Host-RAM={host_ram_txt}, '
-            f'Swap={swap_txt}, Host-Swap={host_swap_txt}'
+            f'RAM: {ram_txt}, Host-RAM: {host_ram_txt}, '
+            f'Swap: {swap_txt}, Host-Swap: {host_swap_txt}'
         )
 
         # ---------------- cpu ----------------
@@ -313,7 +313,7 @@ def main() -> None:
         throttled = cpu_throttled(cg)
 
         cpu_perf = f"cpu_pct={cpu_pct:.1f};{cpu_warn};{cpu_crit};0;{cpu_max}"
-        txt = f"CPU={cpu_pct:.1f}% of {cpu_max}%"
+        txt = f"CPU: {cpu_pct:.1f}/{cpu_max}%"
         if throttled:
             txt += " (throttled)"
 
