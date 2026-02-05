@@ -35,7 +35,7 @@ It is designed to be simple, robust, and semantically quiet in production enviro
 
 __Configuration__
 
-You can write the configuration to `/etc/check_mk/check_mk_agent.d/crowdsec.conf`
+You can write the configuration to `/etc/check_mk_agent.d/crowdsec.conf`
 - `CROWDSEC_DECISIONS_WARN=5`
 - `CROWDSEC_DECISIONS_CRIT=20`
 
