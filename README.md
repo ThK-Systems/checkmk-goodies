@@ -64,8 +64,6 @@ You can write the configuration to `/etc/check_mk_agent.d/docker_container_memor
 - `CONTAINERS` **(mandatory!!!)** - Space-separated list of Docker container names to monitor.
 - `MEM_WARN`  - Global warning threshold for RAM usage in percent of the container memory limit.
 - `MEM_CRIT`  - Global critical threshold for RAM usage in percent of the container memory limit.
-- `SWAP_WARN` - Global warning threshold for swap usage in percent of the effective swap limit.
-- `SWAP_CRIT` - Global critical threshold for swap usage in percent of the effective swap limit.
 - `CPU_WARN`  - Global warning threshold for CPU usage in percent of the container CPU limit.
 - `CPU_CRIT`  - Global critical threshold for CPU usage in percent of the container CPU limit.
 
@@ -73,8 +71,6 @@ For all threshold options, per-container overrides are supported by appending th
 
 - `MEM_WARN.<container>`
 - `MEM_CRIT.<container>`
-- `SWAP_WARN.<container>`
-- `SWAP_CRIT.<container>`
 - `CPU_WARN.<container>`
 - `CPU_CRIT.<container>`
 
