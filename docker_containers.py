@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import time
+import subprocess
+from pathlib import Path
+from typing import Optional
+from datetime import datetime
+
+
+CFG_PATH = Path("/etc/check_mk_agent.d/docker_containers.conf")
+STATE_DIR = Path("/var/lib/check_mk_agent/state")
+CG_BASE = Path("/sys/fs/cgroup/system.slice")
+
+DEFAULTS = {
+    "MEM_WARN": 80,
+    "MEM_CRIT": 90,
+    "SWAP_WARN": 50,
+    "SWAP_CRIT": 80,
+    "CPU_WARN": 80,
+    "CPU_CRIT": 95,
+}
+
+
+# ------------------------------------------------------------
+# helpers
+# ------------------------------------------------------------
+def human_duration(seconds: int) -> str:
+    mins, sec = divmod(seconds, 60)
+    hrs, mins = divmod(mins, 60)
+    days, hrs = divmod(hrs, 24)
+
+    parts = []
+    if days:
+        parts.append(f"{days}d")
+    if hrs:
+        parts.append(f"{hrs}h")
+    if mins:
+        parts.append(f"{mins}m")
+    if not parts:
+        parts.append(f"{sec}s")
+
+    return " ".join(partsg
+
+
+def seconds_since(ts: str) -> int:
+    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return int(time.time() - dt.timestamp())
+
+
+def read_int(path: Path) -> int:
+    return int(path.read_text().strip())
+
+
+def host_mem_total_mb() -> int:
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        if line.startswith("MemTotal:"):
+            return int(line.split()[1]) // 1024
+    return 0
+
+
+def host_swap_total_mb() -> int:
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        if line.startswith("SwapTotal:"):
+            return int(line.split()[1]) // 1024
+    return 0
+
+
+# ------------------------------------------------------------
+# config
+# ------------------------------------------------------------
+def load_config_raw() -> dict[str, str]:
+    cfg: dict[str, str] = {}
+    if CFG_PATH.exists():
+        for raw in CFG_PATH.read_text().splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            cfg[k.strip()] = v.strip().strip('"')
+    return cfg
+
+
+def cfg_value(cfg: dict, key: str, name: str, default: int) -> int:
+    return int(cfg.get(f"{key}.{name}", cfg.get(key, default)))
+
+
+# ------------------------------------------------------------
+# docker inspect
+# ------------------------------------------------------------
+class Inspect:
+    def __init__(self, data: dict):
+        self.id = data["Id"]
+        self.state = data["State"]
+        self.restart_count = int(data.get("RestartCount", 0))
+
+
+def docker_inspect(name: str) -> Optional[Inspect]:
+    try:
+        out = subprocess.check_output(
+            ["docker", "inspect", name],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        return None
+
+    return Inspect(json.loads(out)[0])
+
+
+# ------------------------------------------------------------
+# cpu state
+# ------------------------------------------------------------
+class CpuState:
+    def __init__(self) -> None:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+    def path(self, cid: str) -> Path:
+        return STATE_DIR / f"docker_cpu_{cid}.state"
+
+    def compute_pct(self, cid: str, usage_usec: int) -> float:
+        now = time.time()
+        p = self.path(cid)
+
+        if not p.exists():
+            p.write_text(f"{usage_usec} {now}")
+            return 0.0
+
+        old_u, old_t = map(float, p.read_text().split())
+        p.write_text(f"{usage_usec} {now}")
+
+        dt = now - old_t
+        if dt <= 0:
+            return 0.0
+
+        return (usage_usec - old_u) / 1_000_000 / dt * 100.0
+
+
+def cpu_max_percent(cg: Path) -> int:
+    quota, period = (cg / "cpu.max").read_text().split()
+    if quota == "max":
+        return 100
+    return int(int(quota) / int(period) * 100)
+
+
+def cpu_throttled(cg: Path) -> bool:
+    for line in (cg / "cpu.stat").read_text().splitlines():
+        if line.startswith("nr_throttled"):
+            return int(line.split()[1]) > 0
+    return False
+
+
+# ------------------------------------------------------------
+# main
+# ------------------------------------------------------------
+def main() -> None:
+    cfg = load_config_raw()
+    cpu_state = CpuState()
+
+    containers = cfg.get("CONTAINERS", "").split()
+    host_mem_mb = host_mem_total_mb()
+    host_swap_mb = host_swap_total_mb()
+
+    for name in containers:
+        ins = docker_inspect(name)
+
+        # ---------------- state ----------------
+        if ins is None:
+            print(f'2 "Docker {name} state" - CRIT: container not present')
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: container not present')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: container not present')
+            continue
+
+        st = ins.state
+        status = st.get("Status", "")
+        running = st.get("Running", False)
+
+        if running:
+            age = human_duration(seconds_since(st["StartedAt"]))
+            print(f'0 "Docker {name} state" - OK: running since {age}')
+
+        elif status == "restarting":
+            age = human_duration(seconds_since(st["StartedAt"]))
+            print(
+                f'1 "Docker {name} state" - WARN: restarting since {age} '
+                f"(restart #{ins.restart_count})"
+            )
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: restarting')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: restarting')
+            continue
+
+        elif status == "paused":
+            age = human_duration(seconds_since(st["StartedAt"]))
+            print(f'1 "Docker {name} state" - WARN: paused since {age}')
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: paused')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: paused')
+            continue
+
+        elif status == "dead":
+            age = human_duration(seconds_since(st["FinishedAt"]))
+            print(f'2 "Docker {name} state" - CRIT: dead since {age}')
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: dead')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: dead')
+            continue
+
+        elif st.get("OOMKilled"):
+            print(f'2 "Docker {name} state" - CRIT: OOM killed')
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: OOM killed')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: OOM killed')
+            continue
+
+        elif st.get("ExitCode", 0) == 0:
+            age = human_duration(seconds_since(st["FinishedAt"]))
+            print(
+                f'1 "Docker {name} state" - WARN: stopped since {age} '
+                f"(exit code 0)"
+            )
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: stopped')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: stopped')
+            continue
+
+        else:
+            print(f'2 "Docker {name} state" - CRIT: exit code {st["ExitCode"]}')
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: exited')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: exited')
+            continue
+
+        # ---------------- cgroup ----------------
+        cg = CG_BASE / f"docker-{ins.id}.scope"
+        if not cg.exists():
+            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: cgroup missing')
+            print(f'3 "Docker {name} cpu" - UNKNOWN: cgroup missing')
+            continue
+
+        # ---------------- memory ----------------
+        mem_warn = cfg_value(cfg, "MEM_WARN", name, DEFAULTS["MEM_WARN"])
+        mem_crit = cfg_value(cfg, "MEM_CRIT", name, DEFAULTS["MEM_CRIT"])
+        swap_warn = cfg_value(cfg, "SWAP_WARN", name, DEFAULTS["SWAP_WARN"])
+        swap_crit = cfg_value(cfg, "SWAP_CRIT", name, DEFAULTS["SWAP_CRIT"])
+
+        ram_mb = read_int(cg / "memory.current") // 1024 // 1024
+        mem_max_raw = (cg / "memory.max").read_text().strip()
+
+        if mem_max_raw != "max":
+            limit_mb = int(mem_max_raw) // 1024 // 1024
+            warn_mb = int(limit_mb * mem_warn / 100)
+            crit_mb = int(limit_mb * mem_crit / 100)
+            ram_perf = f"ram_mb={ram_mb};{warn_mb};{crit_mb};0;{limit_mb}"
+            ram_txt = f"{ram_mb}/{limit_mb}MB ({ram_mb * 100 // limit_mb}%)"
+        else:
+            ram_perf = f"ram_mb={ram_mb};;;;"
+            ram_txt = f"{ram_mb}MB (unlimited)"
+
+        if host_mem_mb > 0:
+            host_ram_txt = f"{ram_mb}/{host_mem_mb}MB ({ram_mb * 100 // host_mem_mb}%)"
+        else:
+            host_ram_txt = "unknown"
+
+        swap_mb = read_int(cg / "memory.swap.current") // 1024 // 1024
+        swap_max_raw = (cg / "memory.swap.max").read_text().strip()
+
+        if swap_max_raw != "max":
+            cgroup_swap_max_mb = int(swap_max_raw) // 1024 // 1024
+            effective_swap_max_mb = cgroup_swap_max_mb
+        else:
+            cgroup_swap_max_mb = None
+            effective_swap_max_mb = host_swap_mb if host_swap_mb > 0 else None
+
+        if effective_swap_max_mb:
+            swap_warn_mb = int(effective_swap_max_mb * swap_warn / 100)
+            swap_crit_mb = int(effective_swap_max_mb * swap_crit / 100)
+            swap_perf = (
+                f"swap_mb={swap_mb};"
+                f"{swap_warn_mb};"
+                f"{swap_crit_mb};"
+                f"0;{effective_swap_max_mb}"
+            )
+        else:
+            swap_perf = f"swap_mb={swap_mb};;;;"
+
+        if cgroup_swap_max_mb:
+            swap_txt = (
+                f"{swap_mb}/{cgroup_swap_max_mb}MB "
+                f"({swap_mb * 100 // cgroup_swap_max_mb}%)"
+            )
+        else:
+            swap_txt = f"{swap_mb}MB (unlimited)"
+
+        if host_swap_mb > 0:
+            host_swap_txt = (
+                f"{swap_mb}/{host_swap_mb}MB "
+                f"({swap_mb * 100 // host_swap_mb}%)"
+            )
+        else:
+            host_swap_txt = "no host swap"
+
+        print(
+            f'P "Docker {name} memory (mb)" '
+            f'{ram_perf} {swap_perf} '
+            f'RAM={ram_txt}, Host-RAM={host_ram_txt}, '
+            f'Swap={swap_txt}, Host-Swap={host_swap_txt}'
+        )
+
+        # ---------------- cpu ----------------
+        cpu_warn = cfg_value(cfg, "CPU_WARN", name, DEFAULTS["CPU_WARN"])
+        cpu_crit = cfg_value(cfg, "CPU_CRIT", name, DEFAULTS["CPU_CRIT"])
+
+        usage = 0
+        for line in (cg / "cpu.stat").read_text().splitlines():
+            if line.startswith("usage_usec"):
+                usage = int(line.split()[1])
+                break
+
+        cpu_pct = cpu_state.compute_pct(ins.id, usage)
+        cpu_max = cpu_max_percent(cg)
+        throttled = cpu_throttled(cg)
+
+        cpu_perf = f"cpu_pct={cpu_pct:.1f};{cpu_warn};{cpu_crit};0;{cpu_max}"
+        txt = f"CPU={cpu_pct:.1f}% of {cpu_max}%"
+        if throttled:
+            txt += " (throttled)"
+
+        print(f'P "Docker {name} cpu" {cpu_perf} {txt}')
+
+
+if __name__ == "__main__":
+    main()
