@@ -17,8 +17,8 @@ CG_BASE = Path("/sys/fs/cgroup/system.slice")
 DEFAULTS = {
     "MEM_WARN": 80,
     "MEM_CRIT": 90,
-    "SWAP_WARN": 50,
-    "SWAP_CRIT": 80,
+    "SWAP_WARN": 80,
+    "SWAP_CRIT": 90,
     "CPU_WARN": 80,
     "CPU_CRIT": 95,
 }
@@ -301,7 +301,7 @@ def main() -> None:
 
         print(
             f'P "Docker {name} memory (mb)" '
-            f'{ram_perf} {swap_perf} '
+            f'{ram_perf}|{swap_perf} '
             f'RAM={ram_txt}, Host-RAM={host_ram_txt}, '
             f'Swap={swap_txt}, Host-Swap={host_swap_txt}'
         )
