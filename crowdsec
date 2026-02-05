@@ -65,7 +65,7 @@ elif lapi:
     print(f'2 "crowdsec lapi" - {msg}')
 else:
     print('3 "crowdsec lapi" - cscli lapi status failed')
-    print(f'P "crowdsec decisions" - lapi is not reachable'
+    print(f"3 "crowdsec decisions" - lapi is not reachable')
 
 # ------------------------------------------------------------
 # 2. Decisions (WITH perfdata → P)
