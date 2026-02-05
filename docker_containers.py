@@ -159,6 +159,9 @@ def main() -> None:
     cpu_state = CpuState()
 
     containers = cfg.get("CONTAINERS", "").split()
+    if not containers:
+        # No containers configured → nothing to do
+        sys.exit(0)
     host_mem_mb = host_mem_total_mb()
     host_swap_mb = host_swap_total_mb()
 
