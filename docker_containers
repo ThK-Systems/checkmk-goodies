@@ -17,8 +17,6 @@ CG_BASE = Path("/sys/fs/cgroup/system.slice")
 DEFAULTS = {
     "MEM_WARN": 80,
     "MEM_CRIT": 90,
-    "SWAP_WARN": 80,
-    "SWAP_CRIT": 90,
     "CPU_WARN": 80,
     "CPU_CRIT": 95,
 }
@@ -171,9 +169,9 @@ def main() -> None:
 
         # ---------------- state ----------------
         if ins is None:
-            print(f'2 "Docker {name} state" - CRIT: container not present')
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: container not present')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: container not present')
+            print(f'2 "Container {name} state" - CRIT: container not present')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: container not present')
+            print(f'3 "Container {name} cpu" - UNKNOWN: container not present')
             continue
 
         st = ins.state
@@ -182,66 +180,64 @@ def main() -> None:
 
         if running:
             age = human_duration(seconds_since(st["StartedAt"]))
-            print(f'0 "Docker {name} state" - OK: running since {age}')
+            print(f'0 "Container {name} state" - OK: running since {age}')
 
         elif status == "restarting":
             age = human_duration(seconds_since(st["StartedAt"]))
             print(
-                f'1 "Docker {name} state" - WARN: restarting since {age} '
+                f'1 "Container {name} state" - WARN: restarting since {age} '
                 f"(restart #{ins.restart_count})"
             )
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: restarting')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: restarting')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: restarting')
+            print(f'3 "Container {name} cpu" - UNKNOWN: restarting')
             continue
 
         elif status == "paused":
             age = human_duration(seconds_since(st["StartedAt"]))
-            print(f'1 "Docker {name} state" - WARN: paused since {age}')
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: paused')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: paused')
+            print(f'1 "Container {name} state" - WARN: paused since {age}')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: paused')
+            print(f'3 "Container {name} cpu" - UNKNOWN: paused')
             continue
 
         elif status == "dead":
             age = human_duration(seconds_since(st["FinishedAt"]))
-            print(f'2 "Docker {name} state" - CRIT: dead since {age}')
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: dead')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: dead')
+            print(f'2 "Container {name} state" - CRIT: dead since {age}')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: dead')
+            print(f'3 "Container {name} cpu" - UNKNOWN: dead')
             continue
 
         elif st.get("OOMKilled"):
-            print(f'2 "Docker {name} state" - CRIT: OOM killed')
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: OOM killed')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: OOM killed')
+            print(f'2 "Container {name} state" - CRIT: OOM killed')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: OOM killed')
+            print(f'3 "Container {name} cpu" - UNKNOWN: OOM killed')
             continue
 
         elif st.get("ExitCode", 0) == 0:
             age = human_duration(seconds_since(st["FinishedAt"]))
             print(
-                f'1 "Docker {name} state" - WARN: stopped since {age} '
+                f'1 "Container {name} state" - WARN: stopped since {age} '
                 f"(exit code 0)"
             )
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: stopped')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: stopped')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: stopped')
+            print(f'3 "Container {name} cpu" - UNKNOWN: stopped')
             continue
 
         else:
-            print(f'2 "Docker {name} state" - CRIT: exit code {st["ExitCode"]}')
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: exited')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: exited')
+            print(f'2 "Container {name} state" - CRIT: exit code {st["ExitCode"]}')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: exited')
+            print(f'3 "Container {name} cpu" - UNKNOWN: exited')
             continue
 
         # ---------------- cgroup ----------------
         cg = CG_BASE / f"docker-{ins.id}.scope"
         if not cg.exists():
-            print(f'3 "Docker {name} memory (mb)" - UNKNOWN: cgroup missing')
-            print(f'3 "Docker {name} cpu" - UNKNOWN: cgroup missing')
+            print(f'3 "Container {name} memory (mb)" - UNKNOWN: cgroup missing')
+            print(f'3 "Container {name} cpu" - UNKNOWN: cgroup missing')
             continue
 
         # ---------------- memory ----------------
         mem_warn = cfg_value(cfg, "MEM_WARN", name, DEFAULTS["MEM_WARN"])
         mem_crit = cfg_value(cfg, "MEM_CRIT", name, DEFAULTS["MEM_CRIT"])
-        swap_warn = cfg_value(cfg, "SWAP_WARN", name, DEFAULTS["SWAP_WARN"])
-        swap_crit = cfg_value(cfg, "SWAP_CRIT", name, DEFAULTS["SWAP_CRIT"])
 
         ram_mb = read_int(cg / "memory.current") // 1024 // 1024
         mem_max_raw = (cg / "memory.max").read_text().strip()
@@ -272,12 +268,8 @@ def main() -> None:
             effective_swap_max_mb = host_swap_mb if host_swap_mb > 0 else None
 
         if effective_swap_max_mb:
-            swap_warn_mb = int(effective_swap_max_mb * swap_warn / 100)
-            swap_crit_mb = int(effective_swap_max_mb * swap_crit / 100)
             swap_perf = (
-                f"swap_mb={swap_mb};"
-                f"{swap_warn_mb};"
-                f"{swap_crit_mb};"
+                f"swap_mb={swap_mb};;;"
                 f"0;{effective_swap_max_mb}"
             )
         else:
@@ -300,7 +292,7 @@ def main() -> None:
             host_swap_txt = "no host swap"
 
         print(
-            f'P "Docker {name} memory (mb)" '
+            f'P "Container {name} memory (mb)" '
             f'{ram_perf}|{swap_perf} '
             f'RAM={ram_txt}, Host-RAM={host_ram_txt}, '
             f'Swap={swap_txt}, Host-Swap={host_swap_txt}'
@@ -325,7 +317,7 @@ def main() -> None:
         if throttled:
             txt += " (throttled)"
 
-        print(f'P "Docker {name} cpu" {cpu_perf} {txt}')
+        print(f'P "Container {name} cpu" {cpu_perf} {txt}')
 
 
 if __name__ == "__main__":
