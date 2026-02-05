@@ -41,28 +41,45 @@ You can write the configuration to `/etc/check_mk/check_mk_agent.d/crowdsec.conf
 
 ---
 
-## docker_container_memory
+## docker_containers
 
 __Requirements__:
 - docker
 
 __Description__
 
-Docker Container Memory (Local Check)
+This Python-based Checkmk local plugin monitors Docker containers using cgroup v2 data and `docker inspect`, providing state, memory, and CPU services per container.
 
-This Checkmk local agent plugin monitors memory usage of all running Docker containers relative to their configured memory limits.
+Memory and swap usage are reported in megabytes, with thresholds derived from container limits, while the service output additionally shows host-level RAM and swap usage for better context.  
 
-The check runs on the Docker host and uses `docker stats --no-stream` to collect current memory usage and limits. For each container with a defined memory limit, a dedicated Checkmk service is created.
+CPU usage is calculated via cgroup deltas, respects CPU limits from `cpu.max`, and indicates throttling when the container is actively constrained.  
 
-Reported metrics include current memory usage, warning and critical thresholds (derived from the container limit), and the maximum memory limit. All values are reported as numeric perfdata suitable for graphing.
+The script is designed to be deterministic, fast, and suitable for frequent polling (e.g. every five minutes) without generating unnecessary alert noise.
 
-Containers without an explicit memory limit are automatically ignored.
 
 __Configuration__
 
-You can write the configuration to `/etc/check_mk/check_mk_agent.d/docker_container_memory.conf`
-- `WARN_PCT` (default: 85)
-- `CRIT_PCT` (default: 95)
+You can write the configuration to `/etc/check_mk_agent.d/docker_container_memory.conf`
+
+- `CONTAINERS` **(mandatory!!!)** - Space-separated list of Docker container names to monitor.
+- `MEM_WARN`  - Global warning threshold for RAM usage in percent of the container memory limit.
+- `MEM_CRIT`  - Global critical threshold for RAM usage in percent of the container memory limit.
+- `SWAP_WARN` - Global warning threshold for swap usage in percent of the effective swap limit.
+- `SWAP_CRIT` - Global critical threshold for swap usage in percent of the effective swap limit.
+- `CPU_WARN`  - Global warning threshold for CPU usage in percent of the container CPU limit.
+- `CPU_CRIT`  - Global critical threshold for CPU usage in percent of the container CPU limit.
+
+For all threshold options, per-container overrides are supported by appending the container name as a suffix:
+
+- `MEM_WARN.<container>`
+- `MEM_CRIT.<container>`
+- `SWAP_WARN.<container>`
+- `SWAP_CRIT.<container>`
+- `CPU_WARN.<container>`
+- `CPU_CRIT.<container>`
+
+If a per-container option is not defined, the global value is used.  
+If neither is present, the script’s built-in default is applied.
 
 ---
 
