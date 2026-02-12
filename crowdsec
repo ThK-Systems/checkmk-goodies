@@ -9,8 +9,8 @@ from pathlib import Path
 # ------------------------------------------------------------
 CFG_PATH = Path("/etc/check_mk_agent.d/crowdsec.conf")
 
-DEFAULT_DECISIONS_WARN = 100
-DEFAULT_DECISIONS_CRIT = 300
+DEFAULT_DECISIONS_WARN = 30
+DEFAULT_DECISIONS_CRIT = 100
 
 
 def load_config() -> dict[str, str]:
