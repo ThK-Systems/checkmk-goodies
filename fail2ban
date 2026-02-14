@@ -1,0 +1,30 @@
+#!/bin/bash
+
+CONFIG="/etc/check_mk_agent.d/fail2ban.conf"
+
+DEFAULT_WARN=30
+DEFAULT_CRIT=100
+
+[[ -f "$CONFIG" ]] && source "$CONFIG"
+
+JAILS=$(fail2ban-client status 2>/dev/null | awk -F: '/Jail list/ {gsub(/,/, "", $2); print $2}')
+
+if [[ -z "$JAILS" ]]; then
+    echo 'P "fail2ban" bans=0;;;0; no active jails'
+    exit 0
+fi
+
+for jail in $JAILS; do
+    BANS=$(fail2ban-client status "$jail" 2>/dev/null | awk '/Currently banned/ {print $4}')
+    [[ -z "$BANS" ]] && BANS=0
+
+    jail_var=$(echo "$jail" | tr '-' '_' | tr '.' '_')
+
+    WARN_VAR="WARN_${jail_var}"
+    CRIT_VAR="CRIT_${jail_var}"
+
+    WARN=${!WARN_VAR:-$DEFAULT_WARN}
+    CRIT=${!CRIT_VAR:-$DEFAULT_CRIT}
+
+    echo "P \"fail2ban $jail\" bans=${BANS};${WARN};${CRIT};0; ${BANS} banned IPs"
+done
