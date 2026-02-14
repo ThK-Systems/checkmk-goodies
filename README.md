@@ -56,7 +56,6 @@ CPU usage is calculated via cgroup deltas, respects CPU limits from `cpu.max`, a
 
 The script is designed to be deterministic, fast, and suitable for frequent polling (e.g. every five minutes) without generating unnecessary alert noise.
 
-
 __Configuration__
 
 You can write the configuration to `/etc/check_mk_agent.d/docker_container_memory.conf`
@@ -76,6 +75,23 @@ For all threshold options, per-container overrides are supported by appending th
 
 If a per-container option is not defined, the global value is used.  
 If neither is present, the script’s built-in default is applied.
+
+---
+
+## fail2ban
+
+__Requirements__:
+- fail2ban
+
+__Description__
+
+This local plugin creates one service per active fail2ban jail and exposes the current number of banned IPs as a metric. Default thresholds are set to 50 (WARN) and 100 (CRIT), but can be overridden per jail via /etc/check_mk_agent.d/fail2ban.conf. Jail names are automatically sanitized for safe variable handling in Bash. The script dynamically adapts to newly added or removed jails without further configuration.
+
+__Configuration__
+
+You can write the configuration to `/etc/check_mk_agent.d/fail2ban.conf`
+- `WARN_<jail-name>=<value>`
+- `CRIT_<jail-name>=<value>`
 
 ---
 
