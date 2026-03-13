@@ -1,0 +1,56 @@
+#!/bin/bash
+
+CONFIG="/etc/check_mk_agent.d/ipset.conf"
+
+DEFAULT_WARN=70
+DEFAULT_CRIT=90
+
+declare -A WARN_MAP
+declare -A CRIT_MAP
+
+# read config
+if [[ -f "$CONFIG" ]]; then
+    while IFS='=' read -r key value; do
+        [[ "$key" =~ ^#|^$ ]] && continue
+
+        if [[ "$key" =~ ^(.+)_WARN$ ]]; then
+            WARN_MAP["${BASH_REMATCH[1]}"]="$value"
+        elif [[ "$key" =~ ^(.+)_CRIT$ ]]; then
+            CRIT_MAP["${BASH_REMATCH[1]}"]="$value"
+        fi
+    done < "$CONFIG"
+fi
+
+for set in $(ipset list -name 2>/dev/null); do
+
+    info=$(ipset list "$set" 2>/dev/null)
+
+    maxelem=$(awk '
+        /^Header:/ {
+            for (i=1;i<=NF;i++) {
+                if ($i=="maxelem") {
+                    print $(i+1)
+                    exit
+                }
+            }
+        }' <<<"$info")
+
+    entries=$(awk -F': ' '/^Number of entries:/ {print $2; exit}' <<<"$info")
+
+    [[ -z "$entries" ]] && continue
+
+    warn_pct=${WARN_MAP[$set]:-$DEFAULT_WARN}
+    crit_pct=${CRIT_MAP[$set]:-$DEFAULT_CRIT}
+
+    if [[ -z "$maxelem" || "$maxelem" -le 0 ]]; then
+        echo "0 ipset_${set} entries=${entries} ipset ${set}: ${entries} entries (no maxelem)"
+        continue
+    fi
+
+    warn=$((maxelem * warn_pct / 100))
+    crit=$((maxelem * crit_pct / 100))
+    usage_pct=$((entries * 100 / maxelem))
+
+    echo "P ipset_${set} entries=${entries};${warn};${crit};0;${maxelem} ipset ${set}: ${entries}/${maxelem} (${usage_pct}%)"
+
+done
