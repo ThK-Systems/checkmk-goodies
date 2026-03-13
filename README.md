@@ -120,6 +120,23 @@ To use this script, you have to disable lpwevers´ plugin.
 
 ---
 
+## ipset
+
+__Requirements__:
+- ipset
+
+__Description__
+
+This local plugin monitors the level in percentage of each **ipset**. 
+
+__Configuration__
+
+You can write the configuration to `/etc/check_mk_agent.d/ipset.conf`
+- `<ip-set-name>_WARN=<value in percent>`
+- `<ip-set-name>_CRIT=<value in percent>`
+
+---
+
 ## zram
 
 __Requirements__:
