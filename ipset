@@ -11,13 +11,24 @@ declare -A CRIT_MAP
 # read config
 if [[ -f "$CONFIG" ]]; then
     while IFS='=' read -r key value; do
-        [[ "$key" =~ ^#|^$ ]] && continue
+        [[ -z "$key" || "$key" =~ ^# ]] && continue
 
-        if [[ "$key" =~ ^(.+)_WARN$ ]]; then
-            WARN_MAP["${BASH_REMATCH[1]}"]="$value"
-        elif [[ "$key" =~ ^(.+)_CRIT$ ]]; then
-            CRIT_MAP["${BASH_REMATCH[1]}"]="$value"
-        fi
+        case "$key" in
+            DEFAULT_WARN)
+                DEFAULT_WARN="$value"
+                ;;
+            DEFAULT_CRIT)
+                DEFAULT_CRIT="$value"
+                ;;
+            *_WARN)
+                name="${key%_WARN}"
+                WARN_MAP["$name"]="$value"
+                ;;
+            *_CRIT)
+                name="${key%_CRIT}"
+                CRIT_MAP["$name"]="$value"
+                ;;
+        esac
     done < "$CONFIG"
 fi
 
