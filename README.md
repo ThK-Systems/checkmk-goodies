@@ -131,9 +131,13 @@ This local plugin monitors the level in percentage of each **ipset**.
 
 __Configuration__
 
-You can write the configuration to `/etc/check_mk_agent.d/ipset.conf`
+You can write your site configuration to `/etc/check_mk_agent.d/ipset.conf`
+- `DEFAULT_WARN=<value in percent>` (Default is 70)
+- `DEFAULT_CRIT=<value in percent>` (Default is 90)
 - `<ip-set-name>_WARN=<value in percent>`
 - `<ip-set-name>_CRIT=<value in percent>`
+
+
 
 ---
 
